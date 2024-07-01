@@ -79,7 +79,6 @@ def add_relationships(villagers):
     # Create family units
     for _ in range(50):  # Create 50 family units
         parents = []
-        children = []
 
         # Create parents
         parent1 = random.choice(villagers)
@@ -94,15 +93,20 @@ def add_relationships(villagers):
         parent1['relationships'].append({"relation": "spouse", "name": parent2['name']})
         parent2['relationships'].append({"relation": "spouse", "name": parent1['name']})
 
+        # Generate ages for parents to ensure valid age range for children
+        parent1['age'] = generate_age(min_age=30, max_age=60)
+        parent2['age'] = generate_age(min_age=parent1['age']-20, max_age=parent1['age']+20)
+
         # Create children
+        children = []
         for _ in range(random.randint(1, 5)):  # Each family can have 1 to 5 children
             child = find_or_create_person(villagers, random.choice(random_names))
             child_age_max = min(parent1['age'], parent2['age']) - 18
             if child_age_max < 1:
                 continue  # Skip if no valid age range for children
-            child['age'] = generate_age(1, child_age_max)
+            child['age'] = generate_age(0, child_age_max)
             if child['age'] >= min(parent1['age'], parent2['age']):
-                child['age'] = generate_age(1, child_age_max)
+                child['age'] = generate_age(0, child_age_max)
             child['relationships'].append({"relation": "parent", "name": parent1['name']})
             child['relationships'].append({"relation": "parent", "name": parent2['name']})
             parent1['relationships'].append({"relation": "child", "name": child['name']})
@@ -141,11 +145,49 @@ def add_relationships(villagers):
 
 villagers = add_relationships(villagers)
 
+# Function to print the family tree
+def print_family_tree(villager, depth=0, visited=None):
+    if visited is None:
+        visited = set()
+    if villager['name'] in visited:
+        return
+    visited.add(villager['name'])
+
+    indent = "  " * depth
+    print(f"{indent}{villager['name']} (Age: {villager['age']}, Sex: {villager['sex']}, Race: {villager['race']})")
+
+    relations = {
+        "spouse": [],
+        "child": [],
+        "parent": [],
+        "sibling": [],
+        "grandparent": [],
+        "grandchild": [],
+        "aunt/uncle": [],
+        "niece/nephew": []
+    }
+
+    for relation in villager['relationships']:
+        related_person = next((v for v in villagers if v['name'] == relation['name']), None)
+        if related_person:
+            relations[relation['relation']].append(related_person)
+
+    for relation_type, related_people in relations.items():
+        if any(rp['name'] not in visited for rp in related_people):
+            print(f"{indent}  {relation_type.capitalize()}:")
+            for related_person in related_people:
+                if related_person['name'] not in visited:
+                    print_family_tree(related_person, depth + 2, visited)
+
+# Select a family unit to print the family tree
+sample_family_unit = villagers[0]  # Selecting the first villager to print their family tree
+print_family_tree(sample_family_unit)
+
 villagers_json = json.dumps(villagers, indent=4)
 
 # Copy the villagers list to clipboard
 pyperclip.copy(villagers_json)
 
 # Save the output to a file
-with open("family-villages.json", "w") as file:
+with open("family-tree-villagers.json", "w") as file:
     file.write(villagers_json)

@@ -1,6 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
 import random
+import pyperclip
+import json
 
 # Define the URL
 url = "https://dmnes.org/names"
@@ -55,6 +57,12 @@ for name in random_names:
     }
     villagers.append(villager)
 
-# Print out the villagers
-for villager in villagers:
-    print(villager)
+
+villagers_json = json.dumps(villagers, indent=4)
+
+# Copy the villagers list to clipboard
+pyperclip.copy(villagers_json)
+
+# Save the output to a file
+with open("basic-characters.json", "w") as file:
+    file.write(villagers_json)
