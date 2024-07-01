@@ -101,6 +101,8 @@ def add_relationships(villagers):
             if child_age_max < 1:
                 continue  # Skip if no valid age range for children
             child['age'] = generate_age(1, child_age_max)
+            if child['age'] >= min(parent1['age'], parent2['age']):
+                child['age'] = generate_age(1, child_age_max)
             child['relationships'].append({"relation": "parent", "name": parent1['name']})
             child['relationships'].append({"relation": "parent", "name": parent2['name']})
             parent1['relationships'].append({"relation": "child", "name": child['name']})
@@ -142,9 +144,8 @@ villagers = add_relationships(villagers)
 villagers_json = json.dumps(villagers, indent=4)
 
 # Copy the villagers list to clipboard
-villagers_str = str(villagers_json)
-pyperclip.copy(villagers_str)
+pyperclip.copy(villagers_json)
 
 # Save the output to a file
 with open("family-villages.json", "w") as file:
-    print(villagers_str, file=file)
+    file.write(villagers_json)
